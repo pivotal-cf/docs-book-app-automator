@@ -1,0 +1,69 @@
+---
+title: Pivotal Cloud Foundry Healthwatch
+owner: PCF Healthwatch
+---
+
+This documentation describes Pivotal Cloud Foundry (PCF) Healthwatch.
+
+## <a id='features'></a>About PCF Healthwatch
+
+PCF Healthwatch is a service for monitoring and alerting on the current health, performance, and capacity of PCF. To help operators understand the operational state of their PCF deployment, PCF Healthwatch:
+
+* Stores, visualizes and alerts on metrics from core PCF components, including BOSH-reported VM metrics. The service covers the recommended [Key Performance Indicators](https://docs.pivotal.io/pivotalcf/monitoring/kpi.html) and [Key Scaling Indicators](https://docs.pivotal.io/pivotalcf/monitoring/key-cap-scaling.html) for a given version of PCF.
+* Executes health checks as continuous validation tests and creates super metrics. The service stores, displays, and forwards this data into the [Loggregator Firehose](https://docs.pivotal.io/pivotalcf/loggregator/architecture.html#firehose) for external consumption by existing customer solutions. For more information, see [PCF Healthwatch Metrics](metrics.html) and [Access Super Metrics Through the Firehose](using.html#firehose).
+
+All data points are stored in PCF Healthwatch for 25 hours and then pruned.
+
+## <a id="snapshot"></a>Product Snapshot
+
+The following table provides version and version-support information about PCF Healthwatch.
+
+<table class="nice">
+    <th>Element</th>
+    <th>Details</th>
+    <tr>
+        <td>Version</td>
+        <td>v1.4.4</td>
+    </tr>
+    <tr>
+        <td>Release date</td>
+        <td>November 14, 2018</td>
+    </tr>
+    <tr>
+        <td>Compatible Ops Manager version(s)</td>
+        <td>v2.2.x, v2.3.x</td>
+    </tr>
+    <tr>
+        <td>Compatible Pivotal Application Service version(s)</td>
+        <td>v2.2.x, v2.3.x</td>
+    </tr>
+     <tr>
+        <td>Compatible Pivotal Cloud Foundry Event Alerts version(s)</td>
+        <td>v1.2.x</td>
+    </tr>
+    <tr>
+        <td>IaaS support</td>
+        <td>AWS, Azure, GCP, and vSphere</td>
+    </tr>
+    <tr>
+        <td>IPsec support</td>
+        <td>Yes</td>
+    </tr>
+</table>
+
+## <a id="limitations"></a>Limitations
+
+* PCF Healthwatch is intended to monitor only the PCF foundation it is installed on.
+
+## <a id='guide'></a>PCF Healthwatch User Guide ##
+
+* [PCF Healthwatch Architecture](architecture.html)
+* [Installing and Configuring PCF Healthwatch](installing.html)
+* [Using PCF Healthwatch](using.html)
+* [PCF Healthwatch Resources](resources.html)
+* [PCF Healthwatch Metrics](metrics.html)
+* [Monitoring PCF Healthwatch](monitoring.html)
+* [Troubleshooting PCF Healthwatch](troubleshooting.html)
+* [Updating Alert Configurations](api/alerts.html)
+* [Updating Free Chunk Configurations](api/free-chunks.html)
+* [Release Notes and Known Issues](release-notes.html)

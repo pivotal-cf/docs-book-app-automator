@@ -1,0 +1,418 @@
+---
+title: PCF Healthwatch Metrics
+owner: PCF Healthwatch
+---
+
+This topic lists the super metrics created by Pivotal Cloud Foundry (PCF) Healthwatch. 
+
+<p class="note"><strong>Note</strong>: For external monitoring consumers, PCF Healthwatch forwards the metrics that it creates into the Loggregator Firehose. You can retrieve these metrics with a nozzle or through the <a href="using.html#logcache">Log Cache API</a>.</p>
+
+## <a id='sli'></a>Platform Service Level Indicators
+
+PCF Healthwatch generates metrics that directly indicate the health of several platform components.
+You can use these metrics with service level objectives to calculate percent availability and error budgets.
+
+### <a id='cli'></a>Cloud Foundry CLI Health
+
+The Cloud Foundry Command Line Interface (cf CLI) enables developers to create and manage apps on PCF. PCF Healthwatch executes a continuous test suite for validating the core functions of the cf CLI.
+
+The table below provides information about the cf CLI health smoke tests and the metrics that are generated for these tests.
+
+<table class="nice">
+<tr>
+  <th>Test</th>
+  <th>Metric</th>
+  <th>Frequency</th>
+  <th>Description</th>
+</tr>
+<tr>
+  <td>Can login</td>
+  <td><code>healthwatch.health.check.cliCommand.login</code> and <code>healthwatch.health.check.cliCommand.login.timeout</code></td>
+  <td>5 min</td>
+  <td><code>1</code> = pass or <code>0</code> = fail</td>
+</tr>
+<tr>
+  <td>Can push</td>
+  <td><code>healthwatch.health.check.cliCommand.push</code> and <code>healthwatch.health.check.cliCommand.push.timeout</code></td>
+  <td>5 min</td>
+  <td><code>1</code> = pass, <code>0</code> = fail, or <code>-1</code> = test did not run</td>
+</tr>
+<tr>
+  <td>Can start</td>
+  <td><code>healthwatch.health.check.cliCommand.start</code> and <code>healthwatch.health.check.cliCommand.start.timeout</code></td>
+  <td>5 min</td>
+  <td><code>1</code> = pass, <code>0</code> = fail, or <code>-1</code> = test did not run</td>
+</tr>
+<tr>
+  <td>Receiving logs</td>
+  <td><code>healthwatch.health.check.cliCommand.logs</code> and <code>healthwatch.health.check.cliCommand.logs.timeout</code></td>
+  <td>5 min</td>
+  <td><code>1</code> = pass, <code>0</code> = fail, or <code>-1</code> test did not run</td>
+</tr>
+<tr>
+  <td>Can stop</td>
+  <td><code>healthwatch.health.check.cliCommand.stop</code> and <code>healthwatch.health.check.cliCommand.stop.timeout</code></td>
+  <td>5 min</td>
+  <td><code>1</code> = pass, <code>0</code> = fail, or <code>-1</code> test did not run</td>
+</tr>
+<tr>
+  <td>Can delete</td>
+  <td><code>healthwatch.health.check.cliCommand.delete</code> and <code>healthwatch.health.check.cliCommand.delete.timeout</code></td>
+  <td>5 min</td>
+  <td><code>1</code> = pass, <code>0</code> = fail, or <code>-1</code> test did not run</td>
+</tr>
+<tr>
+  <td>Test app push time</td>
+  <td><code>healthwatch.health.check.cliCommand.pushTime</code></td>
+  <td>5 min</td>
+  <td>Time in ms</td>
+</tr>
+<tr>
+  <td>Overall smoke test battery result</td>
+  <td><code>healthwatch.health.check.cliCommand.success</code></td>
+  <td>5 min</td>
+  <td><code>1</code> = pass or <code>0</code> = fail</td>
+</tr>
+<tr>
+  <td>Overall smoke test battery run time</td>
+  <td><code>healthwatch.health.check.cliCommand.duration</code></td>
+  <td>5 min</td>
+  <td>Time in ms</td>
+</tr>
+</table>
+
+<p class="note"><strong>Note</strong>: Timeout metrics are written only when a timeout occurs, after 2 minutes. Their value is always zero.</p>
+
+<p class="note"><strong>Note</strong>: PCF Healthwatch runs this test suite in the <strong>system</strong> org and the <strong>healthwatch</strong> space.</p>
+
+### <a id='opsman'></a>Ops Manager Health
+
+Issues with Ops Manager health can impact an operator's ability to perform an upgrade or to scale PCF. Therefore, it is recommended to continuously monitor Ops Manager health. PCF Healthwatch executes this check as follows:
+
+<p class="note"><strong>Note</strong>: This metric is not emitted if the Ops Manager health check is disabled. For more information, see <a href="installing.html#healthwatch-opsman">Installing PCF Healthwatch</a>.</p>
+
+<table class="nice">
+<tr>
+  <th>Test</th>
+  <th>Metric</th>
+  <th>Frequency</th>
+  <th>Description</th>
+</tr>
+<tr>
+  <td>Ops Manager availability</td>
+  <td><code>healthwatch.health.check.OpsMan.available</code></td>
+  <td>1 min</td>
+  <td><code>1</code> = pass or <code>0</code> = fail</td>
+</tr>
+</table>
+
+### <a id='canaryapp'></a>Canary App Health
+
+
+App availability and responsiveness issues can significantly impact the experience of end users. By default, PCF Healthwatch uses Apps Manager as a canary app. An excellent indicator for the overall health of apps running on PCF, if Apps Manager is down, it is highly likely other apps are failing as well. If it is up and responsive, then other apps and their underlying routing are likely healthy as well. As of v1.3, you can configure PCF Healthwatch to use a different PCF app for this test. See [Configuring Canary App Health Endpoint](api/canary-configuration.html).
+
+<table class="nice">
+<tr>
+  <th>Test</th>
+  <th>Metric</th>
+  <th>Frequency</th>
+  <th>Description</th>
+</tr>
+<tr>
+  <td>Apps Manager availability</td>
+  <td><code>healthwatch.health.check.CanaryApp.available</code></td>
+  <td>1 min</td>
+  <td><code>1</code> = pass or <code>0</code> = fail or 10s timeout</td>
+</tr>
+<tr>
+  <td>Aps Manager response time</td>
+  <td><code>healthwatch.health.check.CanaryApp.responseTime</code></td>
+  <td>1 min</td>
+  <td>Time in ms</td>
+</tr>
+</table>
+
+### <a id='bosh-director'></a>BOSH Director Health
+
+If the BOSH Director is not responsive and functional, BOSH-managed VMs lose their resiliency. It is recommended to continuously monitor the health of the BOSH Director. PCF Healthwatch executes this check as follows:
+
+<table class="nice">
+<tr>
+  <th>Test</th>
+  <th>Metric</th>
+  <th>Frequency</th>
+  <th>Description</th>
+</tr>
+<tr>
+  <td>BOSH Director health</td>
+  <td><code>healthwatch.health.check.bosh.director.success</code> and <code>healthwatch.health.check.bosh.director.timeout</code></td>
+  <td>10 min</td>
+  <td><code>1</code> = pass or <code>0</code> = fail</td>
+</tr>
+</table>
+
+<p class="note"><strong>Note</strong>: PCF Healthwatch deploys, stops, starts, and deletes a VM named <code>bosh-health-check</code> as part of this test suite.</p>
+
+<p class="note"><strong>Note</strong>: The timeout metric is written if deploying or deleting the VM takes more than 10 minutes.</p>
+
+## <a id='logging-performance'></a> Logging Performance
+
+This section lists metrics used to monitor Loggregator, the PCF component responsible for logging.
+
+### <a id='firehose-loss'></a>Log Transport Loss Rate
+
+This derived metric is recommended for automating and monitoring platform scaling. Two versions of the metric (per minute and per hour) are used to monitor the Loggregator Firehose.
+
+<table class="nice">
+<tr>
+  <th>Reports</th>
+  <th>Metric</th>
+  <th>Description</th>
+</tr>
+<tr>
+  <td>Log Transport Loss Rate</td>
+  <td><code>healthwatch.Firehose.LossRate.1H</code> and <code>healthwatch.Firehose.LossRate.1M</code></td>
+  <td>Loss rate per minute and per hour</td>
+</tr>
+</table>
+
+### <a id='doppler-capacity'></a>Doppler Message Rate Capacity
+
+This derived metric is recommended for automating and monitoring the platform scaling of the Doppler component portion of Loggregator. It represents the average load of each Doppler instance. Upon nearing an average of 1 million messages-per-minute per Doppler (the recommended maximum load), additional Doppler instances should be added.
+
+<table class="nice">
+<tr>
+  <th>Reports</th>
+  <th>Metric</th>
+  <th>Description</th>
+</tr>
+<tr>
+  <td>Doppler Message Rate Capacity</td>
+  <td><code>healthwatch.Doppler.MessagesAverage.1M</code></td>
+  <td>The number of reported messages coming in to Doppler <code>loggregator.doppler.ingress</code> divided by the current number of Doppler instances to produce an approximate envelopes-per-minute rate load on the Doppler instances</td>
+</tr>
+</table>
+
+### <a id='adapter-loss'></a>Adapter Loss Rate
+
+This derived metric is recommended for automating and monitoring platform scaling. The metric is used to monitor the CF Syslog Drain feature of Loggregator.
+
+<table class="nice">
+<tr>
+  <th>Reports</th>
+  <th>Metric</th>
+  <th>Description</th>
+</tr>
+<tr>
+  <td>Adapter loss rate (syslog drain performance)</td>
+  <td><code>healthwatch.SyslogDrain.Adapter.LossRate.1M</code></td>
+  <td>Loss rate per minute</td>
+</tr>
+</table>
+
+### <a id='rlp-loss'></a>Reverse Log Proxy Loss Rate
+
+This derived metric is recommended for automating and monitoring platform scaling. The metric is used to monitor the CF Syslog Drain feature of Loggregator.
+
+<table class="nice">
+<tr>
+  <th>Reports</th>
+  <th>Metric</th>
+  <th>Description</th>
+</tr>
+<tr>
+  <td>Reverse Log Proxy loss rate (syslog drain performance)</td>
+  <td><code>healthwatch.SyslogDrain.RLP.LossRate.1M</code></td>
+  <td>Loss rate per minute</td>
+</tr>
+</table>
+
+### <a id='syslog-drain-binding-capacity'></a>Syslog Drain Binding Capacity
+
+This derived metric is recommended for automating and monitoring platform scaling. The metric is used to monitor the CF Syslog Drain feature of Loggregator.
+
+<table class="nice">
+<tr>
+  <th>Reports</th>
+  <th>Metric</th>
+  <th>Description</th>
+</tr>
+<tr>
+  <td>Average number of drain bindings across Adapter instances</td>
+  <td><code>healthwatch.SyslogDrain.Adapter.BindingsAverage.5M</code></td>
+  <td>The number of reported syslog drain bindings <code>cf-syslog-drain.scheduler.drains</code> divided by the current number of Syslog Adapters <code>cf-syslog-drain.scheduler.adapters</code> to produce a 5-minute rolling average</td>
+</tr>
+</table>
+
+<p class="note"><strong>Note</strong>: Each adapter can handle a limited number of bindings. Calculating the ratio of drain bindings to available Adapters helps to monitor and scale Adapter instances.</p>
+
+## <a id='capacity'></a>Capacity Available
+
+This section lists metrics used to monitor the total percentage of available memory, disk, and cell container capacity.
+
+### <a id='free-memory-chunks'></a>Number of Available Free Chunks of Memory
+
+This derived metric is recommended for automating and monitoring platform scaling. Insufficient free chunks of memory can prevent pushing and scaling apps. Monitoring the amount of free chunks remaining is a more valuable indicator of impending `cf push` errors due to lack of memory than relying on the Memory Remaining metrics alone.
+
+<table class="nice">
+<tr>
+  <th>Reports</th>
+  <th>Metric</th>
+  <th>Description</th>
+</tr>
+<tr>
+  <td>Available free chunks of memory</td>
+  <td><code>healthwatch.Diego.AvailableFreeChunks</code></td>
+  <td>
+
+  The current number of calculated 4-GB chunks of free memory across all cells. The default calculation value of 4-GB can be <a href="./api/free-chunks.html">modified via API</a>.
+  </td>
+</tr>
+</table>
+
+### <a id='memory'></a>Percentage of Memory Available
+
+This derived metric is recommended for automating and monitoring platform scaling. Going below the [recommended percentages](https://docs.pivotal.io/pivotalcf/monitoring/key-cap-scaling.html#cell) for your environment set-up can result in insufficient capacity to tolerate failure of an entire AZ. 
+
+<table class="nice">
+<tr>
+  <th>Reports</th>
+  <th>Metric</th>
+  <th>Description</th>
+</tr>
+<tr>
+  <td>Available memory</td>
+  <td><code>healthwatch.Diego.TotalPercentageAvailableMemoryCapacity.5M</code></td>
+  <td>Percentage of available memory across all cells (averaged over last 5 min)</td>
+</tr>
+</table>
+
+### <a id='memory-total'></a>Total Memory Available
+
+This derived metric is recommended for automating platform scaling and understanding on-going trends for capacity planning. 
+
+<table class="nice">
+<tr>
+  <th>Reports</th>
+  <th>Metric</th>
+  <th>Description</th>
+</tr>
+<tr>
+  <td>Available memory</td>
+  <td><code>healthwatch.Diego.TotalAvailableMemoryCapacity.5M</code></td>
+  <td>Total remaining available memory across all cells (averaged over the last 5 min)</td>
+</tr>
+</table>
+
+
+### <a id='free-disk-chunks'></a>Number of Available Free Chunks of Disk
+
+This derived metric is recommended for automating and monitoring platform
+scaling. Insufficient free chunks of disk can prevent pushing and scaling apps.
+Diego cannot stage app instances and tasks without at least 6GB free. The amount
+of free chunks remaining is a more valuable indicator of impending
+`cf push` errors due to lack of disk than the Disk Remaining metrics alone.
+
+<table class="nice">
+<tr>
+  <th>Reports</th>
+  <th>Metric</th>
+  <th>Description</th>
+</tr>
+<tr>
+  <td>Available free chunks of disk</td>
+  <td><code>healthwatch.Diego.AvailableFreeChunksDisk</code></td>
+  <td>
+
+  The current number of calculated 6-GB chunks of free disk across all cells. The default calculation value of 6-GB can be <a href="./api/free-chunks.html">modified via API</a>.</td>
+</tr>
+</table>
+
+### <a id='disk'></a>Percentage of Disk Available
+
+This derived metric is recommended for automating and monitoring platform scaling. Going below the [recommended percentages](https://docs.pivotal.io/pivotalcf/monitoring/key-cap-scaling.html#cell) for your environment set-up can result in insufficient capacity to tolerate failure of an entire AZ. 
+
+<table class="nice">
+<tr>
+  <th>Reports</th>
+  <th>Metric</th>
+  <th>Description</th>
+</tr>
+<tr>
+  <td>Available disk</td>
+  <td><code>healthwatch.Diego.TotalPercentageAvailableDiskCapacity.5M</code></td>
+  <td>Percentage of available disk across all cells (averaged over last 5 min)</td>
+</tr>
+</table>
+
+### <a id='disk-total'></a>Total Disk Available
+
+This derived metric is recommended for automating platform scaling and understanding on-going trends for capacity planning. 
+
+<table class="nice">
+<tr>
+  <th>Reports</th>
+  <th>Metric</th>
+  <th>Description</th>
+</tr>
+<tr>
+  <td>Available disk</td>
+  <td><code>healthwatch.Diego.TotalAvailableDiskCapacity.5M</code></td>
+  <td>Total remaining available disk across all cells (averaged over the last 5 min)</td>
+</tr>
+</table>
+
+### <a id='cell-container'></a>Percentage of Cell Container Capacity Available
+
+This derived metric is recommended for automating and monitoring platform scaling. Going below the [recommended percentages](https://docs.pivotal.io/pivotalcf/monitoring/key-cap-scaling.html#cell) for your environment set-up can result in insufficient capacity to tolerate failure of an entire AZ. 
+
+<table class="nice">
+<tr>
+  <th>Reports</th>
+  <th>Metric</th>
+  <th>Description</th>
+</tr>
+<tr>
+  <td>Available cell container capacity</td>
+  <td><code>healthwatch.Diego.TotalPercentageAvailableContainerCapacity.5M</code></td>
+  <td>Percentage of available cell container capacity (averaged over last 5 min)</td>
+</tr>
+</table>
+
+### <a id='cell-container-total'></a>Total Cell Container Capacity Available
+
+This derived metric is recommended for automating platform scaling and understanding on-going trends for capacity planning.
+
+<table class="nice">
+<tr>
+  <th>Reports</th>
+  <th>Metric</th>
+  <th>Description</th>
+</tr>
+<tr>
+  <td>Available cell container capacity</td>
+  <td><code>healthwatch.Diego.TotalAvailableContainerCapacity.5M</code></td>
+  <td>Total remaining available cell container capacity (averaged over last 5 min)</td>
+</tr>
+</table>
+
+## <a id='bosh-deployment'></a>BOSH Deployment Occurrence
+
+Monitoring BOSH deployment occurrence adds context to related data, such as VM (job) health.
+
+**Limitation**: A BOSH deployment start or complete event can be determined. However, you cannot currently know to which VMs it is occurring.
+
+<table class="nice">
+<tr>
+  <th>Reports</th>
+  <th>Metric</th>
+  <th>Frequency</th>
+  <th>Description</th>
+</tr>
+<tr>
+  <td>BOSH deployment occurrence</td>
+  <td><code>healthwatch.bosh.deployment</code></td>
+  <td>30 sec</td>
+  <td><code>1</code> = a running deployment or <code>0</code> = not a running deployment</td>
+</tr>
+</table>

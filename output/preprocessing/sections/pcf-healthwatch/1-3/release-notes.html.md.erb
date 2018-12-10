@@ -1,0 +1,178 @@
+---
+title: PCF Healthwatch v1.3 Release Notes
+owner: PCF Healthwatch
+---
+
+##<a id='releases'></a>Releases
+
+###<a id='v1.3.3'></a>v1.3.3
+
+**Release Date: November 30, 2018**
+
+* **[Bug Fix]** The delete-space errand deletes the Application Security Group. This resolves an issue that prevented users from reinstalling the Healthwatch tile after deleting it. 
+* **[Bug Fix]** The Healthwatch Ingestor reconnects to the Loggregator Firehose automatically after all Loggregator Traffic Controller VMs are stopped. 
+* **[Bug Fix]** Graph data loads properly on all newly-opened component detail pages.
+* **[Bug Fix]** In the **Health Check** section, the **UAA Client User for BOSH Task Check** field is renamed to **UAA Client Name for BOSH Task Check** to better articulate that a UAA client is required for BOSH task checks.
+* **[Bug Fix]** Healthwatch collects and alerts on the Galera Cluster Status Sum and Galera Total Percentage Healthy Nodes metrics only on clustered node MySQL Pivotal Application Service (PAS) configurations. This prevents erroneous alerts on the Galera Cluster Status Sum and Galera Total Percentage Healthy Nodes metrics for single node MySQL or external database PAS configurations.
+* **[Feature]** Tables in the component detail pages display the full Job Instance ID value. 
+* **[Feature]** Breadcrumbs have a consistent appearance to help users more easily navigate the Healthwatch UI.
+* The following are maintenance upgrades to product dependencies:
+    * CF CLI now v6.40.1
+    * Golang now v1.10.5
+    * Flyway Command-line and Library now v5.2.1
+    * OpenJDK now v1.8.0_192-b03
+    * Spring now Brussels-SR14
+
+
+###<a id='v1.3.2'></a>v1.3.2
+
+**Release Date: August 14, 2018**
+
+* **[Bug Fix]** Fixes display of bar charts within PCF Healthwatch UI so that data remains within the table at different browser sizes.
+* **[Feature]** On Health Check Details table, the following test runner application information is now available: Org, Space, App Name. This change is reflected on the following pages:
+    * Canary App
+    * CLI Command Health
+    * BOSH Director
+    * Ops Man Health
+* Maintenance update of the following product dependencies:
+    * CF Java Client now v.3.12.0    
+    * Golang now v1.10.3
+
+####<a id='v1.3.2-issues'></a>Known Issues
+
+* Currently if Windows-based Diego Cell instances are created via Pivotal Application Service for Windows, these cells are emitting their platform metrics with a hard-coded deployment value of `cf`. This can result in the following impacts to capacity values shown by PCF Healthwatch, or other consumers of monitoring metrics:
+    * If [Isolation Segments](https://docs.pivotal.io/pivotalcf/2-1/adminguide/isolation-segments.html) are used in combination with Isolated Windows-based Diego Cells: Any windows-based cells that are isolated to a given isolation segment are reporting as part of the core cf system deployment. This means that the isolation segment(s) capacity values will be underreporting (i.e., only including linux-based cells and excluding windows-based cells), and the core cf system deployment will be over-reporting capacity (including windows-based cells from isolation segments as part of the core cf system capacity).
+    * If Isolation Segments are not used: The core CF system deployment will correctly show total capacity, however both windows-based Cells and linux-based Cells will be grouped together in PCF Healthwatch capacity assessments such as capacity remaining and number of free chunks of memory.
+* Hides three of the [PAS MySQL KPI](https://docs.pivotal.io/pivotalcf/monitoring/kpi.html#kpi4MySQL) charts. These charts will be available in a future patch version:
+    * Query Rate
+    * MySQL CPU Busy Time
+    * Percentage of Max Connections Used
+* Graphs occasionally fail to load data on newly-opened component detail pages.
+    * Refreshing the page resolves this issue.
+
+###<a id='v1.3.1'></a>v1.3.1
+
+**Release Date: July 23, 2018**
+
+* **[Bug Fix]** Corrects bad flyaway migration issue present in v1.3.0. You can upgrade to v1.3.1 from prior versions v1.2.x and v1.3.0.
+  <div class="note"><strong>Note</strong>:<ul>
+    <li>If you previously installed or upgraded to  v1.3.0, you must follow the procedure below when installing v1.3.1 or later to preserve data.</li>
+    <li>Alternatively, if you do not want to retain data, you can delete v1.3.0 and re-install at v1.3.1.</li> 
+    <li>If you never installed v1.3.0, the procedure below is unnecessary.</li></ul>
+  </div>
+    Follow these steps to upgrade from v1.3.0 to v1.3.1:
+    1. Install the new v1.3.1 tile. The upgrade will fail on the **Push Monitoring Components** errand.
+    1. [SSH into Ops Manager](https://docs.pivotal.io/pivotalcf/2-0/customizing/trouble-advanced.html#ssh). 
+    1. [Log into BOSH](https://docs.pivotal.io/pivotalcf/2-0/customizing/trouble-advanced.html#log-in). 
+    1. Set the Healthwatch deployment name to variable:
+    	<pre class="terminal">
+    	$ export BOSH_DEPLOYMENT=$(bosh deployments --json | jq --raw-output '.Tables[].Rows[] | select(.name | contains("p-healthwatch")) | .name')
+    	</pre>
+    1. SSH into `healthwatch-forwarder` VM:
+    	<pre class="terminal">
+    	$ bosh ssh healthwatch-forwarder/0
+      </pre>
+    1. Become the root user:
+      <pre class="terminal">
+        $ sudo -i
+      </pre>
+    1. Run the following commands to set the MySQL credentials as environment variables.
+      <pre class="terminal">
+       $ $(grep MYSQL_ /var/vcap/jobs/healthwatch-forwarder/bin/healthwatch-forwarder.ctl)
+      </pre>
+      <pre class="terminal">
+    $ export re='^jdbc\:mysql\:\/\/([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)\:([0-9]+)\/(\S+)$'
+      </pre>
+      <pre class="terminal">
+        $ if [[ "$MYSQL\_URL" =~ $re ]]; then
+          echo "Exporting MYSQL\_IP, MYSQL\_PORT, and MYSQL\_DATABASE environment variables."
+          export MYSQL\_IP=${BASH\_REMATCH[1]}
+          export MYSQL\_PORT=${BASH\_REMATCH[2]}
+          export MYSQL\_DATABASE=${BASH\_REMATCH[3]}
+        fi
+      </pre>
+    1. Reset and rerun the database migrations: 
+      <p class="note"><strong>Note</strong>: You can ignore the flyway <code>WARNING</code> messages, but not the <code>ERROR</code> messages.</p>
+      1. Truncate the `schema_version` table to reset the migration version:
+    	<pre class="terminal">
+        $ /var/vcap/packages/mariadb/bin/mariadb --host=${MYSQL\_IP} \
+          --port=${MYSQL\_PORT} --user=${MYSQL\_USERNAME} --password=${MYSQL\_PASSWORD} ${MYSQL\_DATABASE} \
+          -e "TRUNCATE TABLE $MYSQL\_DATABASE.schema_version"
+      </pre>
+      1. Set the migration baseline to a working version:
+      <pre class="terminal">
+      $ /var/vcap/packages/flyway/flyway -user=${MYSQL\_USERNAME} -password=${MYSQL\_PASSWORD} -url=${MYSQL\_URL} \
+        -locations='filesystem:/var/vcap/jobs/push-apps/packages/healthwatch-data/dbmigrations' \
+        -baselineVersion=1201 \
+        baseline
+      </pre>
+      1. Run the migrations:
+      <pre class="terminal">
+      $ /var/vcap/packages/flyway/flyway -user=${MYSQL\_USERNAME} -password=${MYSQL\_PASSWORD} -url=${MYSQL\_URL} \
+        -locations='filesystem:/var/vcap/jobs/push-apps/packages/healthwatch-data/dbmigrations' \
+        migrate
+        </pre>
+    1. Click **Apply Changes** on the installation dashboard to finish installing the PCF Healthwatch tile.  
+
+####<a id='v1.3.1-issues'></a>Known Issues
+
+* Currently if Windows-based Diego Cell instances are created via Pivotal Application Service for Windows, these cells are emitting their platform metrics with a hard-coded deployment value of `cf`. This can result in the following impacts to capacity values shown by PCF Healthwatch, or other consumers of monitoring metrics:
+    * If [Isolation Segments](https://docs.pivotal.io/pivotalcf/2-1/adminguide/isolation-segments.html) are used in combination with Isolated Windows-based Diego Cells: Any windows-based cells that are isolated to a given isolation segment are reporting as part of the core cf system deployment. This means that the isolation segment(s) capacity values will be underreporting (i.e., only including linux-based cells and excluding windows-based cells), and the core cf system deployment will be over-reporting capacity (including windows-based cells from isolation segments as part of the core cf system capacity).
+    * If Isolation Segments are not used: The core CF system deployment will correctly show total capacity, however both windows-based Cells and linux-based Cells will be grouped together in PCF Healthwatch capacity assessments such as capacity remaining and number of free chunks of memory.
+* Hides three of the [PAS MySQL KPI](https://docs.pivotal.io/pivotalcf/monitoring/kpi.html#kpi4MySQL) charts. These charts will be available in a future patch version:
+    * Query Rate
+    * MySQL CPU Busy Time
+    * Percentage of Max Connections Used
+* Graphs occasionally fail to load data on newly-opened component detail pages.
+    * Refreshing the page resolves this issue.
+
+###<a id='v1.3.0'></a>v1.3.0
+
+**Release Date: July 17, 2018**
+
+* If leveraging the alerting capability, PCF Healthwatch v1.3 requires [PCF Event Alerts v1.2](https://docs.pivotal.io/event-alerts)
+* **[Feature]** Updated to support monitoring of Pivotal Cloud Foundry (PCF) v2.2. 
+* **[Feature]** The PCF Healthwatch dashboard UI now highlights Routing and Capacity for Isolation Segment usage.
+* The default threshold values for `VM Memory Used` Alert have been modified: 95% critical and 85% warning.
+   * If these thresholds have been previously modified, this update will not override that user configuration. 
+
+####<a id='v1.3.0-issues'></a>Known Issues
+
+* **[Bug Identified]** v1.3.0 contains a bad flyway migration. This causes issues in upgrades from PCF Healthwatch v1.2.3 or later, and will cause issues in future versions of v1.3. v1.3.0 is no longer available. If you have v1.3.0 installed, upgrade by following the steps outlined in the [1.3.1](#v1.3.1) release notes.
+* Currently if Windows-based Diego Cell instances are created via Pivotal Application Service for Windows, these cells are emitting their platform metrics with a hard-coded deployment value of `cf`. This can result in the following impacts to capacity values shown by PCF Healthwatch, or other consumers of monitoring metrics:
+    * If [Isolation Segments](https://docs.pivotal.io/pivotalcf/2-1/adminguide/isolation-segments.html) are used in combination with Isolated Windows-based Diego Cells: Any windows-based cells that are isolated to a given isolation segment are reporting as part of the core cf system deployment. This means that the isolation segment(s) capacity values will be underreporting (i.e., only including linux-based cells and excluding windows-based cells), and the core cf system deployment will be over-reporting capacity (including windows-based cells from isolation segments as part of the core cf system capacity).
+    * If Isolation Segments are not used: The core CF system deployment will correctly show total capacity, however both windows-based Cells and linux-based Cells will be grouped together in PCF Healthwatch capacity assessments such as capacity remaining and number of free chunks of memory.
+* Hides three of the [PAS MySQL KPI](https://docs.pivotal.io/pivotalcf/monitoring/kpi.html#kpi4MySQL) charts. These charts will be available in a future patch version:
+    * Query Rate
+    * MySQL CPU Busy Time
+    * Percentage of Max Connections Used
+* Graphs occasionally fail to load data on newly-opened component detail pages.
+    * Refreshing the page resolves this issue.
+
+##<a id='new'></a>New Features in v1.3
+
+The section below summarizes key differences between PCF Healthwatch v1.2 and v1.3. For more information about new features in v1.3, see [v1.3.0 release notes](release-notes.html#v1.3.0).
+
+* **Canary Test Feature Enhancement:** Customers can now [configure](api/canary-configuration.html) what cf app the Canary Health test pings
+    * The default application will continue to be Apps Manager unless modified to a desired configuration. If updated, the modified URL will be available to view in the UI (Canary Health info interaction). The modification will persist through upgrades. The functionality of the test, what it measures, and the related [metrics emitted](http://docs.pivotal.io/pcf-healthwatch/1-3/metrics.html#canaryapp) as a result of the test will stay the same. 
+* **Syslog Drain Available for the product’s VM BOSH logs**
+    * [Forwarding](installing.html#configure-syslog-forwarding) these system logs to a remote destination allows for: viewing logs from every VM in the PCF Healthwatch deployment in one place; troubleshooting errors when logs are lost on the source VM. 
+    * Does not currently support TLS. 
+* **[Feature]** New data loss alerts are available. It is highly recommended to [subscribe](http://docs.pivotal.io/event-alerts/1-2/installing.html) to these alerts as the loss of a platform data feed will impair the ability of Healthwatch to effectively monitor the foundation.
+   * `Healthwatch is not receiving needed monitoring metrics from PCF` results from a loss of firehose data for an extended period of time
+   * `Healthwatch is not receiving needed health metrics from BOSH` results from a loss of bosh health monitor data in the firehose for an extended period of time
+* **UI Updates:**
+    * To enable easier navigation across component details pages, an expanding left navigation is now available in the UI. 
+    * Based on feedback, the detailed results table information on Canary App Health, CLI Command Health, BOSH Director Health, and Ops Man Health now includes the Application GUID of the tester app, rather than the Runner ID. The App GUID is more useful for troubleshooting any potential issues with the test application itself. 
+    * The `Job Vitals` panel previously present on the main dashboard has been removed. The primary value of this panel, identifying threshold outliers, is now addressed by available alerting functionality. The `Job Health` panel is still available.
+* **Additional capacity metrics available in datastore**
+    * In the course of troubleshooting memory or disk errors, `rep.CapacityAllocatedMemory`, `rep.ContainerUsageMemory`, `rep.CapacityAllocatedDisk`, and `rep.ContainerUsageDisk` , can be [useful informational metrics](https://content.pivotal.io/blog/keep-your-app-platform-in-a-happy-state-an-operators-guide-to-capacity-management-on-pivotal-cloud-foundry) about the individual Diego Cells. These metrics are now available [to access](using.html#mysql) in the PCF Healthwatch datastore.
+* Metrics created by PCF Healthwatch and published back into the firehose were previously emitted with the job name `metron_forwarder`. As of v1.3.x, the job name is now ``healthwatch_forwarder` to better align with the actual name of the VM. 
+
+##<a id='breaking-automation'></a>Breaking Changes for Automated Pipelines
+* There is a new required radio button configuration to enable or disable the BOSH Deployment Checker.
+   * If automated pipelines are not updated when upgrading form Healthwatch 1.2.x to Healthwatch 1.3.x to specify enabling or disabling the BOSH Deployment Checker, they will break.
+   * To configure the BOSH Deployment Checker, set the following properties to a [UAA client with `bosh.read`](./installing.html#healthwatch-tile)
+      * `.properties.boshtasks.enable.bosh_taskcheck_username`
+      * `.properties.boshtasks.enable.bosh_taskcheck_password`
+   * To disable the BOSH Deployment Checker (it is enabled by default) set `.properties.boshtasks` to `"disable"`    

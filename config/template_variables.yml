@@ -1,0 +1,17 @@
+---
+template_variables:
+  book_title: Pivotal Documentation
+  book_title_short: Pivotal Docs
+  title: <span class="title-deemph">Pivotal</span> Documentation
+  hero_text: "Detailed documentation to help you install, understand, and succeed with Pivotal's enterprise-grade software."
+  product_name: PCF
+  product_abbr: 
+  product_url: https://network.pivotal.io/products/pivotal-cf
+  product_link: <div class="header-item"><a href="https://network.pivotal.io/products/pivotal-cf">Back to Product Page</a></div>
+  support_link: <a href="http://support.pivotal.io" target="_blank">Support</a>
+  support_call_to_action: <a href="http://support.pivotal.io" target="_blank">Need Support?</a>
+  support_url: http://support.pivotal.io
+  use_global_header: true
+  global_header_product_href: https://network.pivotal.io/
+  global_header_product_link_text: Downloads
+  gtm_account_id: GTM-MW4LZHR
