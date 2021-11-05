@@ -14,4 +14,4 @@ template_variables:
   use_global_header: true
   global_header_product_href: https://network.pivotal.io/
   global_header_product_link_text: Downloads
-  gtm_account_id: GTM-MW4LZHR
+  gtm_account_id: GTM-MM86KCJ
