@@ -163,7 +163,7 @@ GEM
     phantomjs (2.1.1.0)
     public_suffix (5.0.0)
     puma (3.12.0)
-    rack (1.6.11)
+    rack (1.6.13)
     rack-livereload (0.3.17)
       rack
     rack-rewrite (1.5.1)
